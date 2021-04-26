@@ -1,0 +1,51 @@
+- hosts: all
+  tasks:
+      - name: yum configuration for docker
+        yum_repository:
+                name: docker
+                description: docker yum repo
+                file: docker
+                baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+                gpgcheck: no
+                enabled: yes
+
+      - name: docker installation
+        ansible.builtin.command:
+            cmd: yum install docker-ce --nobest -y
+
+
+
+      - name: starting docker service
+        service:
+             name: "docker"
+             state: started
+             enabled: yes
+       
+       - name: installling docker sdk
+        command: "pip3 install docker-py "
+
+
+      - name: pulling docker image
+        community.docker.docker_image:
+                             name: "httpd"
+                             source: pull
+
+
+      - name: Directory Creation in host
+        file:
+           path: /task1asset
+           state: directory
+
+
+      - name: Copying file to host
+        copy:
+           src: "index.html"
+           dest: "/task1asset/"
+
+      - name: container creation
+        community.docker.docker_container:
+                name: webserver1
+                image: "httpd"
+                volumes: "/task1asset:/usr/local/apache2/htdocs/"
+                exposed_ports: "80"
+                ports: "8183:80"
